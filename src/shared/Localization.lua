@@ -37,6 +37,8 @@ Localization.Strings = {
 		TrapSideSpikes = "Corridor spikes (3.2)",
 		TrapRam = "Ram (4.3)",
 		TrapFinalTrapdoor = "Final trapdoor (5.2)",
+
+		SpectatorTitle = "Eliminated — Spectating",
 	},
 	ru = {
 		GuideTitle = "Deathrun — Как играть",
@@ -66,6 +68,8 @@ Localization.Strings = {
 		TrapSideSpikes = "Шипы в коридоре (3.2)",
 		TrapRam = "Таран (4.3)",
 		TrapFinalTrapdoor = "Финальный люк (5.2)",
+
+		SpectatorTitle = "Вы выбыли — режим наблюдателя",
 	},
 }
 

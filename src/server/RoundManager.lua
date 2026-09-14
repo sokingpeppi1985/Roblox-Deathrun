@@ -35,15 +35,28 @@ local currentKiller = nil
 local roundActive = false
 local finishedPlayers = {}
 local firstFinisher = false
+local eliminatedPlayers = {}
 
--- Awards the Killer coins whenever a Runner's Humanoid dies during a live
--- round, regardless of which trap (or respawn cycle) caused it.
+-- Awards the Killer coins and puts the Runner into spectator mode whenever
+-- their Humanoid dies during a live round. Roblox's automatic respawn is
+-- disabled for them so they can't just walk back onto the course - they
+-- stay a spectator (see SpectatorGui.client.lua) until teleportAll()
+-- explicitly revives them for the next round.
 local function trackDeaths(player)
 	player.CharacterAdded:Connect(function(character)
 		local humanoid = character:WaitForChild("Humanoid")
 		humanoid.Died:Connect(function()
-			if roundActive and currentKiller and player ~= currentKiller and player.Team == runnerTeam then
+			if
+				roundActive
+				and currentKiller
+				and player ~= currentKiller
+				and player.Team == runnerTeam
+				and not eliminatedPlayers[player]
+			then
+				eliminatedPlayers[player] = true
+				player.CharacterAutoLoads = false
 				RewardManager.AwardKill(currentKiller)
+				Remotes.PlayerEliminated:FireClient(player)
 			end
 		end)
 	end)
@@ -87,6 +100,11 @@ end
 
 local function teleportAll(spawnCFrame)
 	for _, player in ipairs(Players:GetPlayers()) do
+		if eliminatedPlayers[player] then
+			player.CharacterAutoLoads = true
+			player:LoadCharacter()
+			eliminatedPlayers[player] = nil
+		end
 		local character = player.Character or player.CharacterAdded:Wait()
 		local hrp = character:FindFirstChild("HumanoidRootPart") or character:WaitForChild("HumanoidRootPart")
 		hrp.CFrame = spawnCFrame

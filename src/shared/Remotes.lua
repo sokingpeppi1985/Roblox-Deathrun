@@ -21,6 +21,7 @@ local eventNames = {
 	"RoundStatus",
 	"KillerAssigned",
 	"CoinsAwarded",
+	"PlayerEliminated",
 }
 
 local Remotes = {}
