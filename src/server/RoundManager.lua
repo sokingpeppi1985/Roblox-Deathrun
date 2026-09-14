@@ -8,6 +8,7 @@ local Teams = game:GetService("Teams")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
+local RewardManager = require(script.Parent.Economy.RewardManager)
 
 local ROUND_TIME = 240
 local INTERMISSION_TIME = 15
@@ -33,6 +34,25 @@ local runnerTeam = getOrCreateTeam("Runners", BrickColor.new("Bright blue"), tru
 local currentKiller = nil
 local roundActive = false
 local finishedPlayers = {}
+local firstFinisher = false
+
+-- Awards the Killer coins whenever a Runner's Humanoid dies during a live
+-- round, regardless of which trap (or respawn cycle) caused it.
+local function trackDeaths(player)
+	player.CharacterAdded:Connect(function(character)
+		local humanoid = character:WaitForChild("Humanoid")
+		humanoid.Died:Connect(function()
+			if roundActive and currentKiller and player ~= currentKiller and player.Team == runnerTeam then
+				RewardManager.AwardKill(currentKiller)
+			end
+		end)
+	end)
+end
+
+for _, player in ipairs(Players:GetPlayers()) do
+	trackDeaths(player)
+end
+Players.PlayerAdded:Connect(trackDeaths)
 
 function RoundManager.GetKiller()
 	return currentKiller
@@ -103,6 +123,11 @@ function RoundManager.PlayerFinished(player)
 		return
 	end
 	finishedPlayers[player] = true
+
+	local isFirst = not firstFinisher
+	firstFinisher = true
+	RewardManager.AwardFinish(player, isFirst)
+
 	broadcastStatus(player.Name .. " добрался до финиша!", nil)
 end
 
@@ -127,6 +152,7 @@ function RoundManager.Start(mapData)
 			end
 
 			finishedPlayers = {}
+			firstFinisher = false
 			assignTeams()
 			teleportAll(mapData.SpawnCFrame)
 			roundActive = true
@@ -160,8 +186,16 @@ function RoundManager.Start(mapData)
 
 			if result == "killer" then
 				broadcastStatus("Убийца победил!", nil)
+				RewardManager.AwardTeamWin({ currentKiller })
 			else
 				broadcastStatus("Бегуны победили!", nil)
+				local runners = {}
+				for _, player in ipairs(Players:GetPlayers()) do
+					if player ~= currentKiller then
+						table.insert(runners, player)
+					end
+				end
+				RewardManager.AwardTeamWin(runners)
 			end
 
 			currentKiller = nil

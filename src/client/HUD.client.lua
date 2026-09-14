@@ -37,3 +37,54 @@ Remotes.KillerAssigned.OnClientEvent:Connect(function(killerPlayer)
 		label.Text = "Вы — Убийца! Используйте панель ловушек."
 	end
 end)
+
+-- Persistent coin balance, read straight off leaderstats (server is the
+-- source of truth; this just mirrors the IntValue).
+local coinsLabel = Instance.new("TextLabel")
+coinsLabel.Size = UDim2.new(0, 160, 0, 32)
+coinsLabel.Position = UDim2.new(1, -180, 0, 20)
+coinsLabel.BackgroundTransparency = 0.4
+coinsLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+coinsLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+coinsLabel.Font = Enum.Font.GothamBold
+coinsLabel.TextSize = 18
+coinsLabel.Text = "Монеты: 0"
+coinsLabel.Parent = screenGui
+
+local function bindCoinsLabel()
+	local leaderstats = player:WaitForChild("leaderstats")
+	local coins = leaderstats:WaitForChild("Монеты")
+	local function refresh()
+		coinsLabel.Text = "Монеты: " .. coins.Value
+	end
+	coins:GetPropertyChangedSignal("Value"):Connect(refresh)
+	refresh()
+end
+task.spawn(bindCoinsLabel)
+
+-- Floating "+N" popup whenever the server grants coins, purely visual and
+-- driven client-side (tweened locally, no gameplay state involved).
+local TweenService = game:GetService("TweenService")
+
+Remotes.CoinsAwarded.OnClientEvent:Connect(function(amount, reason)
+	local popup = Instance.new("TextLabel")
+	popup.Size = UDim2.new(0, 200, 0, 28)
+	popup.Position = UDim2.new(1, -180, 0, 56)
+	popup.BackgroundTransparency = 1
+	popup.TextColor3 = Color3.fromRGB(255, 215, 0)
+	popup.Font = Enum.Font.GothamBold
+	popup.TextSize = 16
+	popup.TextXAlignment = Enum.TextXAlignment.Left
+	popup.Text = string.format("+%d монет — %s", amount, reason)
+	popup.Parent = screenGui
+
+	local tween = TweenService:Create(
+		popup,
+		TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		{ Position = popup.Position - UDim2.new(0, 0, 0, 30), TextTransparency = 1 }
+	)
+	tween:Play()
+	tween.Completed:Connect(function()
+		popup:Destroy()
+	end)
+end)
