@@ -2,6 +2,8 @@
 -- a touched part, respecting the finish-zone immunity, and de-duplicating
 -- Touched events firing multiple times per second from overlapping limbs.
 
+local Players = game:GetService("Players")
+
 local Common = {}
 
 function Common.getHumanoid(hitPart)
@@ -15,9 +17,17 @@ end
 
 -- Players standing inside the finish arch are immune to every trap (see
 -- MapBuilder/Finish.lua, which sets this attribute via CollectionService's
--- FinishZone tag).
+-- FinishZone tag). The Activator is also always immune - they operate the
+-- traps remotely and were never meant to run the course themselves.
 function Common.isProtected(character)
-	return character ~= nil and character:GetAttribute("InFinishZone") == true
+	if character == nil then
+		return false
+	end
+	if character:GetAttribute("InFinishZone") == true then
+		return true
+	end
+	local player = Players:GetPlayerFromCharacter(character)
+	return player ~= nil and player.Team ~= nil and player.Team.Name == "Activator"
 end
 
 local hitCooldowns = setmetatable({}, { __mode = "k" })

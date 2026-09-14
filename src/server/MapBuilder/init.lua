@@ -15,6 +15,22 @@ local DuelArena = require(script.DuelArena)
 
 local MapBuilder = {}
 
+-- A small raised booth off to the side of the start, out of reach of every
+-- trap. The Activator spawns here instead of on the course - they operate
+-- traps remotely via the panel, they were never meant to run the gauntlet.
+local function buildActivatorBooth(parent)
+	local booth = Instance.new("Part")
+	booth.Name = "ActivatorBooth"
+	booth.Anchored = true
+	booth.Size = Vector3.new(10, 1, 10)
+	booth.Material = Enum.Material.Metal
+	booth.Color = Color3.fromRGB(90, 90, 95)
+	booth.CFrame = CFrame.new(-20, GroundUtil.GroundY + 10, 5)
+	booth.Parent = parent
+
+	return CFrame.new(-20, GroundUtil.GroundY + 12, 5)
+end
+
 function MapBuilder.Build()
 	local existing = Workspace:FindFirstChild("Map")
 	if existing then
@@ -53,11 +69,13 @@ function MapBuilder.Build()
 
 	local finishLine = Finish.Build(map, z)
 	local duelArena = DuelArena.Build(map)
+	local killerSpawnCFrame = buildActivatorBooth(map)
 
 	return {
 		Triggers = triggers,
 		FinishLine = finishLine,
 		SpawnCFrame = CFrame.new(0, GroundUtil.GroundY + 3, 5),
+		KillerSpawnCFrame = killerSpawnCFrame,
 		FinishZ = z,
 		DuelArena = duelArena,
 	}

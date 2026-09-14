@@ -101,7 +101,7 @@ local function assignTeams()
 	return currentKiller
 end
 
-local function teleportAll(spawnCFrame)
+local function teleportAll(spawnCFrame, killerSpawnCFrame)
 	for _, player in ipairs(Players:GetPlayers()) do
 		if eliminatedPlayers[player] then
 			player.CharacterAutoLoads = true
@@ -110,7 +110,7 @@ local function teleportAll(spawnCFrame)
 		end
 		local character = player.Character or player.CharacterAdded:Wait()
 		local hrp = character:FindFirstChild("HumanoidRootPart") or character:WaitForChild("HumanoidRootPart")
-		hrp.CFrame = spawnCFrame
+		hrp.CFrame = (player == currentKiller and killerSpawnCFrame) or spawnCFrame
 		local humanoid = character:FindFirstChildOfClass("Humanoid")
 		if humanoid then
 			humanoid.Health = humanoid.MaxHealth
@@ -193,7 +193,7 @@ function RoundManager.Start(mapData)
 			firstFinisher = false
 			duelForcedWin = false
 			assignTeams()
-			teleportAll(mapData.SpawnCFrame)
+			teleportAll(mapData.SpawnCFrame, mapData.KillerSpawnCFrame)
 			roundActive = true
 
 			local timeLeft = ROUND_TIME
