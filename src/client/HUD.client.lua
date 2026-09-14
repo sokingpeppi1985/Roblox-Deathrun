@@ -34,7 +34,7 @@ end)
 
 Remotes.KillerAssigned.OnClientEvent:Connect(function(killerPlayer)
 	if killerPlayer == player then
-		label.Text = "Вы — Убийца! Используйте панель ловушек."
+		label.Text = "Вы — Активатор! Используйте панель ловушек."
 	end
 end)
 

@@ -28,8 +28,8 @@ local function getOrCreateTeam(name, color, autoAssign)
 	return team
 end
 
-local killerTeam = getOrCreateTeam("Killer", BrickColor.new("Really red"), false)
-local runnerTeam = getOrCreateTeam("Runners", BrickColor.new("Bright blue"), true)
+local killerTeam = getOrCreateTeam("Активатор", BrickColor.new("Really red"), false)
+local runnerTeam = getOrCreateTeam("Бегущие", BrickColor.new("Bright blue"), true)
 
 local currentKiller = nil
 local roundActive = false
@@ -185,10 +185,10 @@ function RoundManager.Start(mapData)
 			roundActive = false
 
 			if result == "killer" then
-				broadcastStatus("Убийца победил!", nil)
+				broadcastStatus("Активатор победил!", nil)
 				RewardManager.AwardTeamWin({ currentKiller })
 			else
-				broadcastStatus("Бегуны победили!", nil)
+				broadcastStatus("Бегущие победили!", nil)
 				local runners = {}
 				for _, player in ipairs(Players:GetPlayers()) do
 					if player ~= currentKiller then

@@ -51,7 +51,7 @@ for _, data in ipairs(buttonDefs) do
 end
 
 local function updateVisibility()
-	screenGui.Enabled = player.Team ~= nil and player.Team.Name == "Killer"
+	screenGui.Enabled = player.Team ~= nil and player.Team.Name == "Активатор"
 end
 
 player:GetPropertyChangedSignal("Team"):Connect(updateVisibility)
