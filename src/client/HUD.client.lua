@@ -1,12 +1,16 @@
 -- Shows round status (waiting / countdown / timer / result) and who the
--- Killer is, pushed from RoundManager via RemoteEvents.
+-- Activator is, pushed from RoundManager via RemoteEvents. Status and
+-- reward-reason payloads are keys, not literal text, so they render in
+-- each client's own language via Localization.lua.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
+local Localization = require(ReplicatedStorage:WaitForChild("Localization"))
 
 local player = Players.LocalPlayer
+local strings = Localization.Get(player.LocaleId)
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "DeathrunHUD"
@@ -24,17 +28,32 @@ label.TextSize = 22
 label.Text = "Deathrun"
 label.Parent = screenGui
 
-Remotes.RoundStatus.OnClientEvent:Connect(function(text, timeLeft)
-	if timeLeft then
-		label.Text = string.format("%s — %d сек", text, timeLeft)
-	else
-		label.Text = text
+local STATUS_KEYS = {
+	waiting = "StatusWaiting",
+	intermission = "StatusIntermission",
+	active = "StatusRoundActive",
+	player_finished = "StatusPlayerFinished",
+	activator_win = "StatusActivatorWin",
+	runners_win = "StatusRunnersWin",
+}
+
+local FORMATTED_STATUSES = {
+	intermission = true,
+	active = true,
+	player_finished = true,
+}
+
+Remotes.RoundStatus.OnClientEvent:Connect(function(statusKey, param)
+	local template = strings[STATUS_KEYS[statusKey]]
+	if not template then
+		return
 	end
+	label.Text = FORMATTED_STATUSES[statusKey] and string.format(template, param) or template
 end)
 
 Remotes.KillerAssigned.OnClientEvent:Connect(function(killerPlayer)
 	if killerPlayer == player then
-		label.Text = "Вы — Активатор! Используйте панель ловушек."
+		label.Text = strings.YouAreActivator
 	end
 end)
 
@@ -48,14 +67,14 @@ coinsLabel.BackgroundColor3 = Color3.new(0, 0, 0)
 coinsLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
 coinsLabel.Font = Enum.Font.GothamBold
 coinsLabel.TextSize = 18
-coinsLabel.Text = "Монеты: 0"
+coinsLabel.Text = string.format(strings.CoinsLabel, 0)
 coinsLabel.Parent = screenGui
 
 local function bindCoinsLabel()
 	local leaderstats = player:WaitForChild("leaderstats")
-	local coins = leaderstats:WaitForChild("Монеты")
+	local coins = leaderstats:WaitForChild("Coins")
 	local function refresh()
-		coinsLabel.Text = "Монеты: " .. coins.Value
+		coinsLabel.Text = string.format(strings.CoinsLabel, coins.Value)
 	end
 	coins:GetPropertyChangedSignal("Value"):Connect(refresh)
 	refresh()
@@ -66,7 +85,16 @@ task.spawn(bindCoinsLabel)
 -- driven client-side (tweened locally, no gameplay state involved).
 local TweenService = game:GetService("TweenService")
 
-Remotes.CoinsAwarded.OnClientEvent:Connect(function(amount, reason)
+local REASON_KEYS = {
+	finish = "ReasonFinish",
+	first_place = "ReasonFirstPlace",
+	team_win = "ReasonTeamWin",
+	kill = "ReasonKill",
+}
+
+Remotes.CoinsAwarded.OnClientEvent:Connect(function(amount, reasonKey)
+	local reasonText = strings[REASON_KEYS[reasonKey]] or reasonKey
+
 	local popup = Instance.new("TextLabel")
 	popup.Size = UDim2.new(0, 200, 0, 28)
 	popup.Position = UDim2.new(1, -180, 0, 56)
@@ -75,7 +103,7 @@ Remotes.CoinsAwarded.OnClientEvent:Connect(function(amount, reason)
 	popup.Font = Enum.Font.GothamBold
 	popup.TextSize = 16
 	popup.TextXAlignment = Enum.TextXAlignment.Left
-	popup.Text = string.format("+%d монет — %s", amount, reason)
+	popup.Text = string.format(strings.CoinsAwardedFormat, amount, reasonText)
 	popup.Parent = screenGui
 
 	local tween = TweenService:Create(

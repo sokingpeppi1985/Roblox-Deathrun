@@ -27,7 +27,7 @@ end
 
 local function getCoinsValue(player)
 	local leaderstats = player:FindFirstChild("leaderstats")
-	return leaderstats and leaderstats:FindFirstChild("Монеты")
+	return leaderstats and leaderstats:FindFirstChild("Coins")
 end
 
 function PlayerData.AddCoins(player, amount)
@@ -54,7 +54,7 @@ local function loadPlayer(player)
 	leaderstats.Parent = player
 
 	local coins = Instance.new("IntValue")
-	coins.Name = "Монеты"
+	coins.Name = "Coins"
 	coins.Value = 0
 	coins.Parent = leaderstats
 

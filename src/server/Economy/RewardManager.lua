@@ -1,6 +1,7 @@
 -- Awards persistent coins for round events and notifies the awarded player
 -- with a toast via RemoteEvent. Amounts come from Config.Rewards so game
--- design can retune them without touching this logic.
+-- design can retune them without touching this logic. The "reason" is a
+-- key (not literal text) so each client can localize it via Localization.lua.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -19,20 +20,20 @@ local function grant(player, amount, reason)
 end
 
 function RewardManager.AwardFinish(player, isFirst)
-	grant(player, Rewards.Finish, "Финиш")
+	grant(player, Rewards.Finish, "finish")
 	if isFirst then
-		grant(player, Rewards.FirstPlace, "Первое место!")
+		grant(player, Rewards.FirstPlace, "first_place")
 	end
 end
 
 function RewardManager.AwardTeamWin(players)
 	for _, player in ipairs(players) do
-		grant(player, Rewards.TeamWin, "Победа в раунде")
+		grant(player, Rewards.TeamWin, "team_win")
 	end
 end
 
 function RewardManager.AwardKill(killerPlayer)
-	grant(killerPlayer, Rewards.Kill, "Убийство")
+	grant(killerPlayer, Rewards.Kill, "kill")
 end
 
 return RewardManager

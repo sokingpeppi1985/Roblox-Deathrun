@@ -16,6 +16,27 @@ Localization.Strings = {
 		ActivatorTipBody = "Use the button panel on the left to trigger traps along the course. Each button has its own cooldown, so watch your timing.",
 		CloseButton = "Got it",
 		HelpButtonLabel = "?",
+
+		StatusWaiting = "Waiting for players...",
+		StatusIntermission = "New round in %d",
+		StatusRoundActive = "Round in progress — %d sec",
+		StatusPlayerFinished = "%s reached the finish!",
+		StatusActivatorWin = "The Activator wins!",
+		StatusRunnersWin = "The Runners win!",
+		YouAreActivator = "You are the Activator! Use the trap panel.",
+
+		CoinsLabel = "Coins: %d",
+		CoinsAwardedFormat = "+%d coins — %s",
+		ReasonFinish = "Finish",
+		ReasonFirstPlace = "First place!",
+		ReasonTeamWin = "Round win",
+		ReasonKill = "Kill",
+
+		TrapSwingLog = "Speed up the log (1.2)",
+		TrapHiddenSpikes = "Grass spikes (2.2)",
+		TrapSideSpikes = "Corridor spikes (3.2)",
+		TrapRam = "Ram (4.3)",
+		TrapFinalTrapdoor = "Final trapdoor (5.2)",
 	},
 	ru = {
 		GuideTitle = "Deathrun — Как играть",
@@ -24,6 +45,27 @@ Localization.Strings = {
 		ActivatorTipBody = "Используй панель кнопок слева, чтобы включать ловушки на трассе. У каждой кнопки своя перезарядка — выбирай момент точнее.",
 		CloseButton = "Понятно",
 		HelpButtonLabel = "?",
+
+		StatusWaiting = "Ожидание игроков...",
+		StatusIntermission = "Новый раунд через %d",
+		StatusRoundActive = "Раунд идёт — %d сек",
+		StatusPlayerFinished = "%s добрался до финиша!",
+		StatusActivatorWin = "Активатор победил!",
+		StatusRunnersWin = "Бегущие победили!",
+		YouAreActivator = "Вы — Активатор! Используйте панель ловушек.",
+
+		CoinsLabel = "Монеты: %d",
+		CoinsAwardedFormat = "+%d монет — %s",
+		ReasonFinish = "Финиш",
+		ReasonFirstPlace = "Первое место!",
+		ReasonTeamWin = "Победа в раунде",
+		ReasonKill = "Убийство",
+
+		TrapSwingLog = "Ускорить бревно (1.2)",
+		TrapHiddenSpikes = "Шипы в траве (2.2)",
+		TrapSideSpikes = "Шипы в коридоре (3.2)",
+		TrapRam = "Таран (4.3)",
+		TrapFinalTrapdoor = "Финальный люк (5.2)",
 	},
 }
 

@@ -28,8 +28,8 @@ local function getOrCreateTeam(name, color, autoAssign)
 	return team
 end
 
-local killerTeam = getOrCreateTeam("Активатор", BrickColor.new("Really red"), false)
-local runnerTeam = getOrCreateTeam("Бегущие", BrickColor.new("Bright blue"), true)
+local killerTeam = getOrCreateTeam("Activator", BrickColor.new("Really red"), false)
+local runnerTeam = getOrCreateTeam("Runners", BrickColor.new("Bright blue"), true)
 
 local currentKiller = nil
 local roundActive = false
@@ -62,8 +62,11 @@ function RoundManager.IsRoundActive()
 	return roundActive
 end
 
-local function broadcastStatus(text, timeLeft)
-	Remotes.RoundStatus:FireAllClients(text, timeLeft)
+-- Sends a status key (not literal text) so each client can render it in its
+-- own language via Localization.lua. `param` is either a number (countdown
+-- / time left) or a player name, depending on the key.
+local function broadcastStatus(statusKey, param)
+	Remotes.RoundStatus:FireAllClients(statusKey, param)
 end
 
 local function assignTeams()
@@ -128,7 +131,7 @@ function RoundManager.PlayerFinished(player)
 	firstFinisher = true
 	RewardManager.AwardFinish(player, isFirst)
 
-	broadcastStatus(player.Name .. " добрался до финиша!", nil)
+	broadcastStatus("player_finished", player.Name)
 end
 
 function RoundManager.Start(mapData)
@@ -141,13 +144,13 @@ function RoundManager.Start(mapData)
 
 	task.spawn(function()
 		while true do
-			broadcastStatus("Ожидание игроков...", nil)
+			broadcastStatus("waiting", nil)
 			while #Players:GetPlayers() < 2 do
 				task.wait(2)
 			end
 
 			for i = INTERMISSION_TIME, 1, -1 do
-				broadcastStatus("Новый раунд через " .. i, nil)
+				broadcastStatus("intermission", i)
 				task.wait(1)
 			end
 
@@ -161,7 +164,7 @@ function RoundManager.Start(mapData)
 			local result = nil
 
 			while timeLeft > 0 do
-				broadcastStatus("Раунд идёт", timeLeft)
+				broadcastStatus("active", timeLeft)
 				task.wait(1)
 				timeLeft -= 1
 
@@ -185,10 +188,10 @@ function RoundManager.Start(mapData)
 			roundActive = false
 
 			if result == "killer" then
-				broadcastStatus("Активатор победил!", nil)
+				broadcastStatus("activator_win", nil)
 				RewardManager.AwardTeamWin({ currentKiller })
 			else
-				broadcastStatus("Бегущие победили!", nil)
+				broadcastStatus("runners_win", nil)
 				local runners = {}
 				for _, player in ipairs(Players:GetPlayers()) do
 					if player ~= currentKiller then

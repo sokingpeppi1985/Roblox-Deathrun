@@ -74,10 +74,10 @@ Config.Traps = {
 }
 
 Config.Rewards = {
-	Finish = 10, -- любой из Бегущих, добравшийся до финиша
-	FirstPlace = 20, -- бонус первому добежавшему, поверх Finish
-	TeamWin = 15, -- всем игрокам выигравшей раунд стороны
-	Kill = 8, -- Активатору за каждое убийство Бегущего
+	Finish = 10, -- any Runner who reaches the finish line
+	FirstPlace = 20, -- bonus for the first Runner to finish, on top of Finish
+	TeamWin = 15, -- every player on the side that won the round
+	Kill = 8, -- the Activator, for each Runner they take down
 }
 
 return Config
