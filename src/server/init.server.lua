@@ -4,6 +4,9 @@
 local MapBuilder = require(script.MapBuilder)
 local RoundManager = require(script.RoundManager)
 local KillerController = require(script.KillerController)
+local PlayerData = require(script.Economy.PlayerData)
+
+PlayerData.Init()
 
 local mapData = MapBuilder.Build()
 

@@ -8,6 +8,8 @@ local Teams = game:GetService("Teams")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
+local RewardManager = require(script.Parent.Economy.RewardManager)
+local DuelManager = require(script.Parent.DuelManager)
 
 local ROUND_TIME = 240
 local INTERMISSION_TIME = 15
@@ -27,12 +29,46 @@ local function getOrCreateTeam(name, color, autoAssign)
 	return team
 end
 
-local killerTeam = getOrCreateTeam("Killer", BrickColor.new("Really red"), false)
+local killerTeam = getOrCreateTeam("Activator", BrickColor.new("Really red"), false)
 local runnerTeam = getOrCreateTeam("Runners", BrickColor.new("Bright blue"), true)
 
 local currentKiller = nil
 local roundActive = false
 local finishedPlayers = {}
+local firstFinisher = false
+local eliminatedPlayers = {}
+local duelArena = nil
+local duelForcedWin = false
+
+-- Awards the Killer coins and puts the Runner into spectator mode whenever
+-- their Humanoid dies during a live round. Roblox's automatic respawn is
+-- disabled for them so they can't just walk back onto the course - they
+-- stay a spectator (see SpectatorGui.client.lua) until teleportAll()
+-- explicitly revives them for the next round.
+local function trackDeaths(player)
+	player.CharacterAdded:Connect(function(character)
+		local humanoid = character:WaitForChild("Humanoid")
+		humanoid.Died:Connect(function()
+			if
+				roundActive
+				and currentKiller
+				and player ~= currentKiller
+				and player.Team == runnerTeam
+				and not eliminatedPlayers[player]
+			then
+				eliminatedPlayers[player] = true
+				player.CharacterAutoLoads = false
+				RewardManager.AwardKill(currentKiller)
+				Remotes.PlayerEliminated:FireClient(player)
+			end
+		end)
+	end)
+end
+
+for _, player in ipairs(Players:GetPlayers()) do
+	trackDeaths(player)
+end
+Players.PlayerAdded:Connect(trackDeaths)
 
 function RoundManager.GetKiller()
 	return currentKiller
@@ -42,8 +78,11 @@ function RoundManager.IsRoundActive()
 	return roundActive
 end
 
-local function broadcastStatus(text, timeLeft)
-	Remotes.RoundStatus:FireAllClients(text, timeLeft)
+-- Sends a status key (not literal text) so each client can render it in its
+-- own language via Localization.lua. `param` is either a number (countdown
+-- / time left) or a player name, depending on the key.
+local function broadcastStatus(statusKey, param)
+	Remotes.RoundStatus:FireAllClients(statusKey, param)
 end
 
 local function assignTeams()
@@ -62,11 +101,16 @@ local function assignTeams()
 	return currentKiller
 end
 
-local function teleportAll(spawnCFrame)
+local function teleportAll(spawnCFrame, killerSpawnCFrame)
 	for _, player in ipairs(Players:GetPlayers()) do
+		if eliminatedPlayers[player] then
+			player.CharacterAutoLoads = true
+			player:LoadCharacter()
+			eliminatedPlayers[player] = nil
+		end
 		local character = player.Character or player.CharacterAdded:Wait()
 		local hrp = character:FindFirstChild("HumanoidRootPart") or character:WaitForChild("HumanoidRootPart")
-		hrp.CFrame = spawnCFrame
+		hrp.CFrame = (player == currentKiller and killerSpawnCFrame) or spawnCFrame
 		local humanoid = character:FindFirstChildOfClass("Humanoid")
 		if humanoid then
 			humanoid.Health = humanoid.MaxHealth
@@ -103,10 +147,29 @@ function RoundManager.PlayerFinished(player)
 		return
 	end
 	finishedPlayers[player] = true
-	broadcastStatus(player.Name .. " добрался до финиша!", nil)
+
+	local isFirst = not firstFinisher
+	firstFinisher = true
+	RewardManager.AwardFinish(player, isFirst)
+
+	broadcastStatus("player_finished", player.Name)
+
+	-- Only the first Runner to finish gets a shot at the Activator (CS
+	-- 1.6-style knife round). Offered on its own coroutine so a slow
+	-- decision never blocks the finish-line Touched handler.
+	if isFirst and currentKiller and duelArena then
+		local killerAtOffer = currentKiller
+		task.spawn(function()
+			DuelManager.OfferDuel(player, killerAtOffer, duelArena, function()
+				duelForcedWin = true
+			end)
+		end)
+	end
 end
 
 function RoundManager.Start(mapData)
+	duelArena = mapData.DuelArena
+
 	mapData.FinishLine.Touched:Connect(function(hit)
 		local player = Players:GetPlayerFromCharacter(hit.Parent)
 		if player then
@@ -116,28 +179,35 @@ function RoundManager.Start(mapData)
 
 	task.spawn(function()
 		while true do
-			broadcastStatus("Ожидание игроков...", nil)
+			broadcastStatus("waiting", nil)
 			while #Players:GetPlayers() < 2 do
 				task.wait(2)
 			end
 
 			for i = INTERMISSION_TIME, 1, -1 do
-				broadcastStatus("Новый раунд через " .. i, nil)
+				broadcastStatus("intermission", i)
 				task.wait(1)
 			end
 
 			finishedPlayers = {}
+			firstFinisher = false
+			duelForcedWin = false
 			assignTeams()
-			teleportAll(mapData.SpawnCFrame)
+			teleportAll(mapData.SpawnCFrame, mapData.KillerSpawnCFrame)
 			roundActive = true
 
 			local timeLeft = ROUND_TIME
 			local result = nil
 
 			while timeLeft > 0 do
-				broadcastStatus("Раунд идёт", timeLeft)
+				broadcastStatus("active", timeLeft)
 				task.wait(1)
 				timeLeft -= 1
+
+				if duelForcedWin then
+					result = "runners"
+					break
+				end
 
 				if countAliveRunners() == 0 then
 					result = "killer"
@@ -159,9 +229,17 @@ function RoundManager.Start(mapData)
 			roundActive = false
 
 			if result == "killer" then
-				broadcastStatus("Убийца победил!", nil)
+				broadcastStatus("activator_win", nil)
+				RewardManager.AwardTeamWin({ currentKiller })
 			else
-				broadcastStatus("Бегуны победили!", nil)
+				broadcastStatus("runners_win", nil)
+				local runners = {}
+				for _, player in ipairs(Players:GetPlayers()) do
+					if player ~= currentKiller then
+						table.insert(runners, player)
+					end
+				end
+				RewardManager.AwardTeamWin(runners)
 			end
 
 			currentKiller = nil

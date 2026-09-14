@@ -20,6 +20,10 @@ local eventNames = {
 	"TriggerFinalTrapdoor",
 	"RoundStatus",
 	"KillerAssigned",
+	"CoinsAwarded",
+	"PlayerEliminated",
+	"DuelOffer",
+	"DuelChoice",
 }
 
 local Remotes = {}

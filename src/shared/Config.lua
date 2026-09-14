@@ -73,4 +73,11 @@ Config.Traps = {
 	},
 }
 
+Config.Rewards = {
+	Finish = 10, -- any Runner who reaches the finish line
+	FirstPlace = 20, -- bonus for the first Runner to finish, on top of Finish
+	TeamWin = 15, -- every player on the side that won the round
+	Kill = 8, -- the Activator, for each Runner they take down
+}
+
 return Config
