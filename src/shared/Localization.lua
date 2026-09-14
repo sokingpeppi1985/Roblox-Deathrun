@@ -39,6 +39,11 @@ Localization.Strings = {
 		TrapFinalTrapdoor = "Final trapdoor (5.2)",
 
 		SpectatorTitle = "Eliminated — Spectating",
+
+		DuelOfferTitle = "You made it first! Challenge the Activator?",
+		DuelChoiceSword = "Sword",
+		DuelChoiceRevolver = "Revolver Duel",
+		DuelChoiceSkip = "Skip",
 	},
 	ru = {
 		GuideTitle = "Deathrun — Как играть",
@@ -70,6 +75,11 @@ Localization.Strings = {
 		TrapFinalTrapdoor = "Финальный люк (5.2)",
 
 		SpectatorTitle = "Вы выбыли — режим наблюдателя",
+
+		DuelOfferTitle = "Ты первый! Бросить вызов Активатору?",
+		DuelChoiceSword = "Меч",
+		DuelChoiceRevolver = "Дуэль на револьверах",
+		DuelChoiceSkip = "Пропустить",
 	},
 }
 

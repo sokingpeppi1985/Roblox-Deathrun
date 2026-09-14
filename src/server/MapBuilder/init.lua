@@ -11,6 +11,7 @@ local Section3 = require(script.Section3_Cave)
 local Section4 = require(script.Section4_Lava)
 local Section5 = require(script.Section5_Final)
 local Finish = require(script.Finish)
+local DuelArena = require(script.DuelArena)
 
 local MapBuilder = {}
 
@@ -51,12 +52,14 @@ function MapBuilder.Build()
 	merge(t5)
 
 	local finishLine = Finish.Build(map, z)
+	local duelArena = DuelArena.Build(map)
 
 	return {
 		Triggers = triggers,
 		FinishLine = finishLine,
 		SpawnCFrame = CFrame.new(0, GroundUtil.GroundY + 3, 5),
 		FinishZ = z,
+		DuelArena = duelArena,
 	}
 end
 

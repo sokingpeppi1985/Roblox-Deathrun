@@ -9,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
 local RewardManager = require(script.Parent.Economy.RewardManager)
+local DuelManager = require(script.Parent.DuelManager)
 
 local ROUND_TIME = 240
 local INTERMISSION_TIME = 15
@@ -36,6 +37,8 @@ local roundActive = false
 local finishedPlayers = {}
 local firstFinisher = false
 local eliminatedPlayers = {}
+local duelArena = nil
+local duelForcedWin = false
 
 -- Awards the Killer coins and puts the Runner into spectator mode whenever
 -- their Humanoid dies during a live round. Roblox's automatic respawn is
@@ -150,9 +153,23 @@ function RoundManager.PlayerFinished(player)
 	RewardManager.AwardFinish(player, isFirst)
 
 	broadcastStatus("player_finished", player.Name)
+
+	-- Only the first Runner to finish gets a shot at the Activator (CS
+	-- 1.6-style knife round). Offered on its own coroutine so a slow
+	-- decision never blocks the finish-line Touched handler.
+	if isFirst and currentKiller and duelArena then
+		local killerAtOffer = currentKiller
+		task.spawn(function()
+			DuelManager.OfferDuel(player, killerAtOffer, duelArena, function()
+				duelForcedWin = true
+			end)
+		end)
+	end
 end
 
 function RoundManager.Start(mapData)
+	duelArena = mapData.DuelArena
+
 	mapData.FinishLine.Touched:Connect(function(hit)
 		local player = Players:GetPlayerFromCharacter(hit.Parent)
 		if player then
@@ -174,6 +191,7 @@ function RoundManager.Start(mapData)
 
 			finishedPlayers = {}
 			firstFinisher = false
+			duelForcedWin = false
 			assignTeams()
 			teleportAll(mapData.SpawnCFrame)
 			roundActive = true
@@ -185,6 +203,11 @@ function RoundManager.Start(mapData)
 				broadcastStatus("active", timeLeft)
 				task.wait(1)
 				timeLeft -= 1
+
+				if duelForcedWin then
+					result = "runners"
+					break
+				end
 
 				if countAliveRunners() == 0 then
 					result = "killer"

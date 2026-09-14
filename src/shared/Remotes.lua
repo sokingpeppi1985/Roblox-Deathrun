@@ -22,6 +22,8 @@ local eventNames = {
 	"KillerAssigned",
 	"CoinsAwarded",
 	"PlayerEliminated",
+	"DuelOffer",
+	"DuelChoice",
 }
 
 local Remotes = {}
